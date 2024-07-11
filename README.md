@@ -1,3 +1,17 @@
+# 산출물
+
+## [MileStone](https://github.com/users/honesty2223/projects/12)
+![MileStone](https://github.com/honesty2223/hhplus-concert-reservation/assets/165884218/b19b47d1-66c8-4008-8794-ed31bcf876f5)
+
+## [ERD](https://dbdiagram.io/d/hhplus-concert-reservation-6686e1ed9939893dae138e70)
+![ERD](https://github.com/honesty2223/hhplus-concert-reservation/assets/165884218/8d3891a9-161c-475c-b0a3-5b028c7bc8d2)
+
+## [API 명세서](https://documenter.getpostman.com/view/36570181/2sA3dyhqYp)
+![API](https://github.com/honesty2223/hhplus-concert-reservation/assets/165884218/ec2bed66-bbdb-485b-bfc0-59e5c389d960)
+
+## Sequence Diagram
+![Sequence Diagram](https://github.com/honesty2223/hhplus-concert-reservation/assets/165884218/c451f225-7d33-409b-b6d8-a54af90055e5)
+
 # [ 3~5주차 과제 ] 콘서트 예약 서비스
 <aside>
 💡 아래 명세를 잘 읽어보고, 서버를 구현합니다.
