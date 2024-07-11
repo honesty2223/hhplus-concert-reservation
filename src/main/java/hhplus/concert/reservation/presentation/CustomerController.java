@@ -1,5 +1,6 @@
-package hhplus.concert.reservation.controller;
+package hhplus.concert.reservation.presentation;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,11 +10,12 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
+@Tag(name = "고객 Controller", description = "잔액 조회 API, 잔액 충전 API")
 public class CustomerController {
 
     Map<String, Object> response = new HashMap<>();
 
-    @GetMapping("/{customerId}")
+    @GetMapping("/customer/{customerId}")
     public ResponseEntity<?> getCustomer(@PathVariable int customerId) {
 
         // Check if user exists in mock data
