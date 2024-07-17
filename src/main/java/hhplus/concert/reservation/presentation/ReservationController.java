@@ -1,5 +1,6 @@
-package hhplus.concert.reservation.controller;
+package hhplus.concert.reservation.presentation;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
+@Tag(name = "예약 Controller", description = "좌석 예약 요청 API, 결제 API")
 public class ReservationController {
 
     Map<String, Object> response = new HashMap<>();

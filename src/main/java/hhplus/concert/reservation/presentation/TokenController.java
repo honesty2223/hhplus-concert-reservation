@@ -1,8 +1,13 @@
-package hhplus.concert.reservation.controller;
+package hhplus.concert.reservation.presentation;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -10,12 +15,14 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
+@Tag(name = "대기열 토큰 Controller", description = "토큰 발급 API, 대기열 조회 API")
 public class TokenController {
 
     Map<String, Object> response = new HashMap<>();
 
+    @Operation(summary = "토큰 발급")
     @PostMapping("/token")
-    public ResponseEntity<?> generateToken(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<?> issueToken(@RequestBody Map<String, Object> request) {
 
         int customerId = (int) request.get("customerId");
         int concertId = (int) request.get("concertId");
