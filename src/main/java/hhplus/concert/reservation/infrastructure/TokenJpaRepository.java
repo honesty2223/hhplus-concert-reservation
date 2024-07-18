@@ -14,7 +14,6 @@ import java.util.Optional;
 @Repository
 public interface TokenJpaRepository extends JpaRepository<Token, Long> {
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT MAX(t.waitNumber) FROM Token t WHERE t.concertId = :concertId")
     Optional<Long> findMaxPositionByConcertId(@Param("concertId") long concertId);
 

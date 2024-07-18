@@ -2,9 +2,7 @@ package hhplus.concert.reservation.infrastructure;
 
 import hhplus.concert.reservation.domain.token.entity.Token;
 import hhplus.concert.reservation.domain.token.repository.TokenRepository;
-import jakarta.persistence.LockModeType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.stereotype.Repository;
 
@@ -28,7 +26,6 @@ public class TokenRepositoryImpl implements TokenRepository {
     }
 
     @Override
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     public Token save(Token newToken) {
         return tokenJpaRepository.save(newToken);
     }
