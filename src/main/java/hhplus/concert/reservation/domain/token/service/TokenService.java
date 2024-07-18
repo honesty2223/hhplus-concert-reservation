@@ -1,5 +1,7 @@
 package hhplus.concert.reservation.domain.token.service;
 
+import hhplus.concert.reservation.domain.common.CoreException;
+import hhplus.concert.reservation.domain.common.ErrorCode;
 import hhplus.concert.reservation.domain.token.entity.Token;
 import hhplus.concert.reservation.domain.token.repository.TokenRepository;
 import org.springframework.stereotype.Service;
@@ -23,7 +25,7 @@ public class TokenService {
         Token targetToken = findByCustomerId(customerId, concertId);
 
         if(targetToken != null) {
-            throw new RuntimeException("이미 대기열에 참가한 고객입니다.");
+            throw new CoreException(ErrorCode.ALREADY_IN_QUEUE);
         }
 
         // 대기열에 PENDING 중인 사람의 마지막 순번을 가져와서 +1 해준 후, 신규 토큰의 순번으로 넣는다.
@@ -47,7 +49,7 @@ public class TokenService {
         Token targetToken = findByCustomerId(customerId, concertId);
 
         if(targetToken == null) {
-            throw new RuntimeException("토큰을 찾을 수 없습니다.");
+            throw new CoreException(ErrorCode.TOKEN_NOT_FOUND);
         }
 
         // 대기열을 통과한 마지막 토큰의 순번 조회 후, 본인 토큰의 순번 update
@@ -70,10 +72,10 @@ public class TokenService {
     // 토큰 활성화 여부 조회
     public boolean isActiveToken(long tokenId) {
         Token targetToken = tokenRepository.findByTokenId(tokenId)
-                .orElseThrow(() -> new RuntimeException("토큰을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CoreException(ErrorCode.TOKEN_NOT_FOUND));
 
         if(!targetToken.isActive()) {
-            throw new RuntimeException("토큰이 비활성화되어 있습니다.");
+            throw new CoreException(ErrorCode.UNAUTHORIZED);
         }
         return true;
     }

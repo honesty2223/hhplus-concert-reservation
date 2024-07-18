@@ -79,7 +79,7 @@ public class TokenUsecaseTest {
         for(int c = 0; c < 3; c++){
             IntStream.range(0, concurrentThreads).forEach(i -> executorService.submit(task));
             // 토큰 만료를 위해 발급 후 30초간 sleep
-            TimeUnit.SECONDS.sleep(30);
+            TimeUnit.SECONDS.sleep(10);
         }
 
         // 모든 쓰레드가 완료될 때까지 기다림
