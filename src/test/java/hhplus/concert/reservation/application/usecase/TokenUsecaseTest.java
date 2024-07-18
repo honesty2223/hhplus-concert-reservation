@@ -67,7 +67,7 @@ public class TokenUsecaseTest {
                 System.out.println("customerId : " + generateResult.getCustomerId() + " tokenId : " + generateResult.getTokenId() + " number : " + generateResult.getWaitNumber());
                 assertNotNull(generateResult);
                 assertEquals(randomCustomerId, generateResult.getCustomerId());
-                assertEquals(1L, generateResult.getConcertId());
+                assertEquals(1, generateResult.getConcertId());
                 assertEquals("PENDING", generateResult.getStatus());
 
             } finally {
@@ -85,15 +85,17 @@ public class TokenUsecaseTest {
         // 모든 쓰레드가 완료될 때까지 기다림
         latch.await();
         executorService.shutdown();
-        executorService.awaitTermination(60, TimeUnit.SECONDS);
+        if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
+            executorService.shutdownNow(); // 작업이 완료되지 않았다면 강제 종료
+        }
     }
 
     @Test
     @DisplayName("콘서트 대기열 조회 테스트")
     public void checkToken() {
         // given
-        long customerId = 1L;
-        long concertId = 1L;
+        long customerId = 1;
+        long concertId = 1;
         customerService.save(new Customer(customerId, "홍길동", 0, LocalDateTime.now(), null));
         concertService.save(new Concert(1, "이무진 콘서트", LocalDateTime.now(), LocalDateTime.now()));
         TokenDTO generateToken = tokenUsecase.generateNewToken(customerId, concertId);
