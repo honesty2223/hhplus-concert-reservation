@@ -1,7 +1,8 @@
 package hhplus.concert.reservation.domain.service;
 
-import hhplus.concert.reservation.domain.entity.Customer;
-import hhplus.concert.reservation.domain.repository.CustomerRepository;
+import hhplus.concert.reservation.domain.customer.entity.Customer;
+import hhplus.concert.reservation.domain.customer.repository.CustomerRepository;
+import hhplus.concert.reservation.domain.customer.service.CustomerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

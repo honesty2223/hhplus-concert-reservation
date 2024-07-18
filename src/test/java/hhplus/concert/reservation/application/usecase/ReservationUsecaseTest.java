@@ -1,9 +1,18 @@
 package hhplus.concert.reservation.application.usecase;
 
-import hhplus.concert.reservation.application.dto.PaymentDTO;
-import hhplus.concert.reservation.application.dto.ReservationDTO;
-import hhplus.concert.reservation.domain.entity.*;
-import hhplus.concert.reservation.domain.service.*;
+import hhplus.concert.reservation.application.reservation.dto.PaymentDTO;
+import hhplus.concert.reservation.application.reservation.dto.ReservationDTO;
+import hhplus.concert.reservation.application.reservation.usecase.ReservationUsecase;
+import hhplus.concert.reservation.domain.customer.entity.Customer;
+import hhplus.concert.reservation.domain.customer.service.CustomerService;
+import hhplus.concert.reservation.domain.payment.entity.Payment;
+import hhplus.concert.reservation.domain.payment.service.PaymentService;
+import hhplus.concert.reservation.domain.reservation.entity.Reservation;
+import hhplus.concert.reservation.domain.reservation.service.ReservationService;
+import hhplus.concert.reservation.domain.seat.entity.Seat;
+import hhplus.concert.reservation.domain.seat.service.SeatService;
+import hhplus.concert.reservation.domain.token.entity.Token;
+import hhplus.concert.reservation.domain.token.service.TokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -89,29 +98,43 @@ public class ReservationUsecaseTest {
 
     @Test
     @DisplayName("주기적으로 만료된 예약을 취소하는 메소드 테스트")
-    public void cancelExpiredReservationsPeriodically() {
+    public void cancelExpiredReservationsTest() {
         // given
+        List<Seat> seats = Arrays.asList(
+                new Seat(1, 1, 1, 7000, false, 1, expiredTime, createTime, updateTime),
+                new Seat(2, 1, 3, 60000, false, 2, expiredTime, createTime, updateTime),
+                new Seat(3, 1, 15, 50000, false, 3, expiredTime, createTime, updateTime)
+        );
         List<Reservation> reservations = Arrays.asList(
                 new Reservation(1, 1, 1, 1, expiredTime, "PENDING", createTime, updateTime),
                 new Reservation(2, 2, 2, 1, expiredTime, "PENDING", createTime, updateTime),
                 new Reservation(3, 3, 3, 1, expiredTime, "PENDING", createTime, updateTime)
         );
 
-        // Save each seat
-        for (Reservation reservation : reservations) {
+        for (int i = 0; i < seats.size(); i++) {
+            Seat seat = seats.get(i);
+            Reservation reservation = reservations.get(i);
+
+            seatService.save(seat);
             reservationService.save(reservation);
         }
 
         // when
-        reservationUsecase.cancelExpiredReservationsPeriodically();
+        reservationUsecase.cancelExpiredReservations();
 
         // then
         Reservation result1 = reservationService.findById(1);
         Reservation result2 = reservationService.findById(2);
         Reservation result3 = reservationService.findById(3);
+        Seat resultSeat1 = seatService.findById(1);
+        Seat resultSeat2 = seatService.findById(2);
+        Seat resultSeat3 = seatService.findById(3);
         assertEquals("CANCELLED", result1.getStatus());
         assertEquals("CANCELLED", result2.getStatus());
         assertEquals("CANCELLED", result3.getStatus());
+        assertNull(resultSeat1.getTempAssignExpiresAt());
+        assertNull(resultSeat2.getTempAssignExpiresAt());
+        assertNull(resultSeat3.getTempAssignExpiresAt());
     }
 
     @Test

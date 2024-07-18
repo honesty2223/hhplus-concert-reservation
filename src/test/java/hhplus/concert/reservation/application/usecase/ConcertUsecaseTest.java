@@ -1,16 +1,17 @@
 package hhplus.concert.reservation.application.usecase;
 
-import hhplus.concert.reservation.application.dto.ConcertDTO;
-import hhplus.concert.reservation.application.dto.ConcertScheduleDTO;
-import hhplus.concert.reservation.application.dto.SeatDTO;
-import hhplus.concert.reservation.domain.entity.Concert;
-import hhplus.concert.reservation.domain.entity.ConcertSchedule;
-import hhplus.concert.reservation.domain.entity.Seat;
-import hhplus.concert.reservation.domain.entity.Token;
-import hhplus.concert.reservation.domain.service.ConcertScheduleService;
-import hhplus.concert.reservation.domain.service.ConcertService;
-import hhplus.concert.reservation.domain.service.SeatService;
-import hhplus.concert.reservation.domain.service.TokenService;
+import hhplus.concert.reservation.application.concert.dto.ConcertDTO;
+import hhplus.concert.reservation.application.concert.dto.ConcertScheduleDTO;
+import hhplus.concert.reservation.application.concert.dto.SeatDTO;
+import hhplus.concert.reservation.application.concert.usecase.ConcertUsecase;
+import hhplus.concert.reservation.domain.concert.entity.Concert;
+import hhplus.concert.reservation.domain.concert.service.ConcertService;
+import hhplus.concert.reservation.domain.concertSchedule.entity.ConcertSchedule;
+import hhplus.concert.reservation.domain.concertSchedule.service.ConcertScheduleService;
+import hhplus.concert.reservation.domain.seat.entity.Seat;
+import hhplus.concert.reservation.domain.seat.service.SeatService;
+import hhplus.concert.reservation.domain.token.entity.Token;
+import hhplus.concert.reservation.domain.token.service.TokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -136,7 +137,7 @@ public class ConcertUsecaseTest {
 
         long concertScheduleId = 1L;
         List<Seat> seats = Arrays.asList(
-                new Seat(1, concertScheduleId, 1, 7000, true, 0, null, createTime, updateTime),
+                new Seat(1, concertScheduleId, 1, 7000, false, 0, null, createTime, updateTime),
                 new Seat(2, concertScheduleId, 3, 60000, false, 0, null, createTime, updateTime),
                 new Seat(3, concertScheduleId, 15, 50000, false, 0, null, createTime, updateTime)
         );

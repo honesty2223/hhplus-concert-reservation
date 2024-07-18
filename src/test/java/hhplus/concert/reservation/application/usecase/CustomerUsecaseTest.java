@@ -1,8 +1,9 @@
 package hhplus.concert.reservation.application.usecase;
 
-import hhplus.concert.reservation.application.dto.CustomerPointDTO;
-import hhplus.concert.reservation.domain.entity.Customer;
-import hhplus.concert.reservation.domain.service.CustomerService;
+import hhplus.concert.reservation.application.customer.dto.CustomerPointDTO;
+import hhplus.concert.reservation.application.customer.usecase.CustomerUsecase;
+import hhplus.concert.reservation.domain.customer.entity.Customer;
+import hhplus.concert.reservation.domain.customer.service.CustomerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
