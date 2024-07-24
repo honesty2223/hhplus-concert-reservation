@@ -1,5 +1,7 @@
 package hhplus.concert.reservation.domain.seat.entity;
 
+import hhplus.concert.reservation.domain.common.CoreException;
+import hhplus.concert.reservation.domain.common.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -55,7 +57,7 @@ public class Seat {
     public void reserveSeat(long customerId) {
         if (isTempAssignmentValid()) {
             // 좌석이 이미 예약된 경우 예외를 발생
-            throw new RuntimeException("이 좌석은 이미 예약되었습니다.");
+            throw new CoreException(ErrorCode.SEAT_ALREADY_RESERVED);
         }
 
         // 좌석을 예약 상태로 설정

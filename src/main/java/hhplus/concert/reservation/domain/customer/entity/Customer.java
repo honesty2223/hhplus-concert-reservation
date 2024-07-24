@@ -1,5 +1,7 @@
 package hhplus.concert.reservation.domain.customer.entity;
 
+import hhplus.concert.reservation.domain.common.CoreException;
+import hhplus.concert.reservation.domain.common.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -44,7 +46,7 @@ public class Customer {
     public void deductPoint(long amount) {
         // 포인트가 부족한 경우 예외를 발생시킵니다
         if (amount > this.point) {
-            throw new IllegalStateException("포인트가 부족합니다.");
+            throw new CoreException(ErrorCode.INSUFFICIENT_POINTS);
         }
 
         this.point -= amount;

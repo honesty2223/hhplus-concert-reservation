@@ -1,5 +1,7 @@
 package hhplus.concert.reservation.domain.customer.service;
 
+import hhplus.concert.reservation.domain.common.CoreException;
+import hhplus.concert.reservation.domain.common.ErrorCode;
 import hhplus.concert.reservation.domain.customer.entity.Customer;
 import hhplus.concert.reservation.domain.customer.repository.CustomerRepository;
 import org.springframework.stereotype.Service;
@@ -15,12 +17,12 @@ public class CustomerService {
 
     public Customer findById(long customerId) {
         return customerRepository.findById(customerId)
-                .orElseThrow(() -> new RuntimeException("해당 고객을 찾을 수 없습니다 : " + customerId));
+                .orElseThrow(() -> new CoreException(ErrorCode.USER_NOT_FOUND));
     }
 
     public Customer findByIdWithLock(long customerId) {
         return customerRepository.findByIdWithLock(customerId)
-                .orElseThrow(() -> new RuntimeException("해당 고객을 찾을 수 없습니다 : " + customerId));
+                .orElseThrow(() -> new CoreException(ErrorCode.USER_NOT_FOUND));
     }
 
     public Customer save(Customer customer) {

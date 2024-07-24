@@ -1,5 +1,7 @@
 package hhplus.concert.reservation.domain.reservation.service;
 
+import hhplus.concert.reservation.domain.common.CoreException;
+import hhplus.concert.reservation.domain.common.ErrorCode;
 import hhplus.concert.reservation.domain.reservation.entity.Reservation;
 import hhplus.concert.reservation.domain.reservation.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
@@ -18,7 +20,7 @@ public class ReservationService {
 
     public Reservation findById(long reservationId) {
         return reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("해당 예약을 찾을 수 없습니다 : " + reservationId));
+                .orElseThrow(() -> new CoreException(ErrorCode.RESERVATION_NOT_FOUND));
     }
 
     public List<Reservation> cancelExpiredReservations() {

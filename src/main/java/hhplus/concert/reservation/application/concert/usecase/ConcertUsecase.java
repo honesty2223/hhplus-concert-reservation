@@ -9,7 +9,6 @@ import hhplus.concert.reservation.domain.concertSchedule.entity.ConcertSchedule;
 import hhplus.concert.reservation.domain.concertSchedule.service.ConcertScheduleService;
 import hhplus.concert.reservation.domain.seat.entity.Seat;
 import hhplus.concert.reservation.domain.seat.service.SeatService;
-import hhplus.concert.reservation.domain.token.service.TokenService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -21,13 +20,11 @@ public class ConcertUsecase {
     private final ConcertService concertService;
     private final ConcertScheduleService concertScheduleService;
     private final SeatService seatService;
-    private final TokenService tokenService;
 
-    public ConcertUsecase(ConcertService concertService, ConcertScheduleService concertScheduleService, SeatService seatService, TokenService tokenService) {
+    public ConcertUsecase(ConcertService concertService, ConcertScheduleService concertScheduleService, SeatService seatService) {
         this.concertService = concertService;
         this.concertScheduleService = concertScheduleService;
         this.seatService = seatService;
-        this.tokenService = tokenService;
     }
 
     /**
@@ -47,10 +44,7 @@ public class ConcertUsecase {
      *
      * @return List<ConcertScheduleDTO> 예약 가능한 날짜 정보를 담은 ConcertDTO 객체 리스트
      */
-    public List<ConcertScheduleDTO> getAvailableDates(long tokenId, long concertId) {
-        // 토큰의 활성화 여부를 확인합니다. 비활성화된 경우 예외가 발생합니다.
-        tokenService.isActiveToken(tokenId);
-
+    public List<ConcertScheduleDTO> getAvailableDates(long concertId) {
         List<ConcertSchedule> scheduls = concertScheduleService.findByConcertId(concertId);
         return scheduls.stream()
                 .map(concertSchedule -> new ConcertScheduleDTO(concertSchedule.getConcertScheduleId(), concertSchedule.getSeatCount(), concertSchedule.getConcertDate()))
@@ -62,10 +56,7 @@ public class ConcertUsecase {
      *
      * @return List<SeatDTO> 예약 가능한 좌석 정보를 담은 ConcertDTO 객체 리스트
      */
-    public List<SeatDTO> getAvailableSeats(long tokenId, long concertScheduleId) {
-        // 토큰의 활성화 여부를 확인합니다. 비활성화된 경우 예외가 발생합니다.
-        tokenService.isActiveToken(tokenId);
-
+    public List<SeatDTO> getAvailableSeats(long concertScheduleId) {
         List<Seat> seats = seatService.findAvailableSeats(concertScheduleId);
         return seats.stream()
                 .map(seat -> new SeatDTO(seat.getSeatId(), seat.getConcertScheduleId(), seat.getSeatNumber(), seat.getPrice(), seat.isFinallyReserved(), seat.getTempAssigneeId()))

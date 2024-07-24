@@ -70,7 +70,7 @@ public class ReservationUsecaseTest {
         seatService.save(seat);
 
         // when
-        ReservationDTO result = reservationUsecase.createReservation(token.getTokenId(), seat.getSeatId(), 1);
+        ReservationDTO result = reservationUsecase.createReservation(seat.getSeatId(), 1);
 
         // then
         assertNotNull(result);
@@ -93,7 +93,7 @@ public class ReservationUsecaseTest {
         seatService.save(seat);
 
         // when & then
-        assertThrows(RuntimeException.class, () -> reservationUsecase.createReservation(token.getTokenId(), seat.getSeatId(), 1));
+        assertThrows(RuntimeException.class, () -> reservationUsecase.createReservation(seat.getSeatId(), 1));
     }
 
     @Test
@@ -154,7 +154,7 @@ public class ReservationUsecaseTest {
         reservationService.save(reservation);
 
         // when
-        PaymentDTO paymentDTO = reservationUsecase.processPayment(token.getTokenId(), reservation.getReservationId(), 7000);
+        PaymentDTO paymentDTO = reservationUsecase.processPayment(reservation.getReservationId(), 7000);
 
         // then
         Payment payment = paymentService.findById(paymentDTO.getPaymentId());

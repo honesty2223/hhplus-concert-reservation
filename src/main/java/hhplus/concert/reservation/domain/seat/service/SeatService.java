@@ -1,5 +1,7 @@
 package hhplus.concert.reservation.domain.seat.service;
 
+import hhplus.concert.reservation.domain.common.CoreException;
+import hhplus.concert.reservation.domain.common.ErrorCode;
 import hhplus.concert.reservation.domain.seat.entity.Seat;
 import hhplus.concert.reservation.domain.seat.repository.SeatRepository;
 import org.springframework.stereotype.Service;
@@ -18,14 +20,14 @@ public class SeatService {
     public List<Seat> findAvailableSeats(long concertScheduleId) {
         List<Seat> seats = seatRepository.findAvailableSeats(concertScheduleId);
         if (seats.isEmpty()) {
-            throw new RuntimeException("해당 날짜에 예약 가능한 좌석이 없습니다.");
+            throw new CoreException(ErrorCode.NO_AVAILABLE_SEATS);
         }
         return seats;
     }
 
     public Seat findById(long seatId) {
         return seatRepository.findById(seatId)
-                .orElseThrow(() -> new RuntimeException("해당 좌석을 찾을 수 없습니다 : " + seatId));
+                .orElseThrow(() -> new CoreException(ErrorCode.SEAT_NOT_FOUND));
     }
 
     public Seat save(Seat seat) {

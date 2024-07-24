@@ -1,5 +1,7 @@
 package hhplus.concert.reservation.domain.concertSchedule.service;
 
+import hhplus.concert.reservation.domain.common.CoreException;
+import hhplus.concert.reservation.domain.common.ErrorCode;
 import hhplus.concert.reservation.domain.concertSchedule.entity.ConcertSchedule;
 import hhplus.concert.reservation.domain.concertSchedule.repository.ConcertScheduleRepository;
 import org.springframework.stereotype.Service;
@@ -18,7 +20,7 @@ public class ConcertScheduleService {
     public List<ConcertSchedule> findByConcertId(long concertId) {
         List<ConcertSchedule> schedules = concertScheduleRepository.findByConcertId(concertId);
         if (schedules.isEmpty()) {
-            throw new RuntimeException("해당 콘서트에 예약 가능한 날짜가 없습니다.");
+            throw new CoreException(ErrorCode.NO_AVAILABLE_DATES);
         }
         return schedules;
     }

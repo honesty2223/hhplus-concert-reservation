@@ -5,6 +5,8 @@ import hhplus.concert.reservation.application.reservation.dto.ReservationDTO;
 import hhplus.concert.reservation.application.reservation.usecase.ReservationUsecase;
 import hhplus.concert.reservation.presentation.controller.reservation.request.PaymentRequest;
 import hhplus.concert.reservation.presentation.controller.reservation.request.ReservationRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,9 +28,13 @@ public class ReservationController {
      * @param reservationRequest 예약 요청 정보 (seatId, customerId)
      * @return 예약 정보를 포함한 응답
      */
+    @Operation(
+            summary = "좌석 예약 요청",
+            security = {@SecurityRequirement(name = "headerAuth")}
+    )
     @PostMapping("/reservation")
-    public ResponseEntity<ReservationDTO> reserveSeat(@RequestHeader("Token-ID") long tokenId, @RequestBody ReservationRequest reservationRequest) {
-        ReservationDTO reservationDTO = reservationUsecase.createReservation(tokenId, reservationRequest.getSeatId(), reservationRequest.getCustomerId());
+    public ResponseEntity<ReservationDTO> reserveSeat(@RequestBody ReservationRequest reservationRequest) {
+        ReservationDTO reservationDTO = reservationUsecase.createReservation(reservationRequest.getSeatId(), reservationRequest.getCustomerId());
         return ResponseEntity.ok(reservationDTO);
     }
 
@@ -38,9 +44,13 @@ public class ReservationController {
      * @param paymentRequest 결제 요청 정보 (reservationId, amount)
      * @return 결제 정보를 포함한 응답
      */
+    @Operation(
+            summary = "결제",
+            security = {@SecurityRequirement(name = "headerAuth")}
+    )
     @PostMapping("/reservation/pay")
-    public ResponseEntity<PaymentDTO> payForReservation(@RequestHeader("Token-ID") long tokenId, @RequestBody PaymentRequest paymentRequest) {
-        PaymentDTO paymentDTO = reservationUsecase.processPayment(tokenId, paymentRequest.getReservationId(), paymentRequest.getAmount());
+    public ResponseEntity<PaymentDTO> payForReservation(@RequestBody PaymentRequest paymentRequest) {
+        PaymentDTO paymentDTO = reservationUsecase.processPayment(paymentRequest.getReservationId(), paymentRequest.getAmount());
         return ResponseEntity.ok(paymentDTO);
     }
 }

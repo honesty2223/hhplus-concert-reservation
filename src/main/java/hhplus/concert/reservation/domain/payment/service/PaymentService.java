@@ -1,5 +1,7 @@
 package hhplus.concert.reservation.domain.payment.service;
 
+import hhplus.concert.reservation.domain.common.CoreException;
+import hhplus.concert.reservation.domain.common.ErrorCode;
 import hhplus.concert.reservation.domain.payment.entity.Payment;
 import hhplus.concert.reservation.domain.payment.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
@@ -15,7 +17,7 @@ public class PaymentService {
 
     public Payment findById(long paymentId) {
         return paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new RuntimeException("해당 결제를 찾을 수 없습니다 : " + paymentId));
+                .orElseThrow(() -> new CoreException(ErrorCode.PAYMENT_NOT_FOUND));
     }
 
     public Payment save(Payment payment) {

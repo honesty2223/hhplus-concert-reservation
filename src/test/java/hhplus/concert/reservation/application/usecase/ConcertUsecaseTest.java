@@ -111,7 +111,7 @@ public class ConcertUsecaseTest {
         }
 
         // when
-        List<ConcertScheduleDTO> result = concertUsecase.getAvailableDates(token.getTokenId(), concertId);
+        List<ConcertScheduleDTO> result = concertUsecase.getAvailableDates(concertId);
 
         // then
         assertNotNull(result); // 결과가 null이 아닌지 확인
@@ -148,7 +148,7 @@ public class ConcertUsecaseTest {
         }
 
         // when
-        List<SeatDTO> result = concertUsecase.getAvailableSeats(token.getTokenId(), concertScheduleId);
+        List<SeatDTO> result = concertUsecase.getAvailableSeats(concertScheduleId);
 
         // then
         assertNotNull(result); // 결과가 null이 아닌지 확인
