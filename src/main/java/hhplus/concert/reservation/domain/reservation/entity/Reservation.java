@@ -44,6 +44,21 @@ public class Reservation {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Version
+    private long version;
+
+    // version 제외한 생성자
+    public Reservation(long reservationId, long customerId, long seatId, long concertScheduleId,LocalDateTime reservationTime, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.reservationId = reservationId;
+        this.customerId = customerId;
+        this.seatId = seatId;
+        this.reservationTime = reservationTime;
+        this.status = status;
+        this.concertScheduleId = concertScheduleId;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Reservation(long customerId, long seatId, long concertScheduleId) {
         this.customerId = customerId;
         this.seatId = seatId;

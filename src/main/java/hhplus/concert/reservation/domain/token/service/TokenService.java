@@ -124,6 +124,10 @@ public class TokenService {
         return tokenRepository.findByCustomerId(customerId, concertId);
     }
 
+    public Token findByCustomerIdAndConcertId(long customerId, long concertId) {
+        return tokenRepository.findByCustomerIdAndConcertId(customerId, concertId);
+    }
+
     public Token findByCustomerIdAndConcertIdWithLock(long customerId, long concertId) {
         return tokenRepository.findByCustomerIdAndConcertIdWithLock(customerId, concertId);
     }

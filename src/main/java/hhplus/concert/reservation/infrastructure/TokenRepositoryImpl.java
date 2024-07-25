@@ -41,6 +41,11 @@ public class TokenRepositoryImpl implements TokenRepository {
     }
 
     @Override
+    public Token findByCustomerIdAndConcertId(long customerId, long concertId) {
+        return tokenJpaRepository.findByCustomerIdAndConcertId(customerId, concertId);
+    }
+
+    @Override
     public Token findByCustomerIdAndConcertIdWithLock(long customerId, long concertId) {
         return tokenJpaRepository.findByCustomerIdAndConcertIdWithLock(customerId, concertId);
     }
