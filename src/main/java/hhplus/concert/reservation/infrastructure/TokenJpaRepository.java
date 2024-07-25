@@ -17,8 +17,6 @@ public interface TokenJpaRepository extends JpaRepository<Token, Long> {
     @Query("SELECT MAX(t.waitNumber) FROM Token t WHERE t.concertId = :concertId")
     Optional<Long> findMaxPositionByConcertId(@Param("concertId") long concertId);
 
-    Optional<Token> findById(long tokenId);
-
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT t FROM Token t WHERE t.customerId = :customerId AND t.concertId = :concertId AND t.status != 'EXPIRED'")
     Token findByCustomerId(@Param("customerId") long customerId, @Param("concertId") long concertId);

@@ -71,7 +71,7 @@ public class TokenService {
 
     // 토큰 활성화 여부 조회
     public boolean isActiveToken(long tokenId) {
-        Token targetToken = tokenRepository.findByTokenId(tokenId)
+        Token targetToken = tokenRepository.findById(tokenId)
                 .orElseThrow(() -> new CoreException(ErrorCode.TOKEN_NOT_FOUND));
 
         if(!targetToken.isActive()) {

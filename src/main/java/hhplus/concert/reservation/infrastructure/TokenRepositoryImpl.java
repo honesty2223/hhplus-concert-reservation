@@ -31,7 +31,7 @@ public class TokenRepositoryImpl implements TokenRepository {
     }
 
     @Override
-    public Optional<Token> findByTokenId(long tokenId) {
+    public Optional<Token> findById(long tokenId) {
         return tokenJpaRepository.findById(tokenId);
     }
 

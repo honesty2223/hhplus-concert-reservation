@@ -126,14 +126,14 @@ public class TokenServiceTest {
         Token mockToken = new Token(1, 1, 1, 2, "ACTIVE", now.minusMinutes(10), now);
 
         // Mock 데이터 설정
-        when(tokenRepository.findByTokenId(tokenId)).thenReturn(Optional.of(mockToken));
+        when(tokenRepository.findById(tokenId)).thenReturn(Optional.of(mockToken));
 
         // when
         boolean result = tokenService.isActiveToken(tokenId);
 
         // then
         assertTrue(result);
-        verify(tokenRepository, times(1)).findByTokenId(tokenId);
+        verify(tokenRepository, times(1)).findById(tokenId);
     }
 
     @Test
@@ -141,11 +141,11 @@ public class TokenServiceTest {
     public void isActiveTokenErrorTest() {
         // given
         long tokenId = 1;
-        when(tokenRepository.findByTokenId(tokenId)).thenReturn(null);
+        when(tokenRepository.findById(tokenId)).thenReturn(null);
 
         // when & then
         assertThrows(RuntimeException.class, () -> tokenService.isActiveToken(tokenId));
-        verify(tokenRepository, times(1)).findByTokenId(tokenId);
+        verify(tokenRepository, times(1)).findById(tokenId);
     }
 
     @Test
