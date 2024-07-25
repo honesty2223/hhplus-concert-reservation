@@ -20,6 +20,10 @@ public class PaymentService {
                 .orElseThrow(() -> new CoreException(ErrorCode.PAYMENT_NOT_FOUND));
     }
 
+    public Payment findByReservationId(long reservationId) {
+        return paymentRepository.findByReservationId(reservationId);
+    }
+
     public Payment save(Payment payment) {
         return paymentRepository.save(payment);
     }
