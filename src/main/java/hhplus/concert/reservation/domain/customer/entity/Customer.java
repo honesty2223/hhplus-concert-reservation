@@ -37,6 +37,18 @@ public class Customer {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Version
+    private long version;
+
+    // version 제외한 생성자
+    public Customer(long customerId, String customerName, long point, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.customerId = customerId;
+        this.customerName = customerName;
+        this.point = point;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     // 포인트 충전
     public void chargePoint(long amount) {
         this.point += amount;

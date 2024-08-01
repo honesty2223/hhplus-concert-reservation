@@ -2,12 +2,6 @@ package hhplus.concert.reservation.application.reservation.usecase;
 
 import hhplus.concert.reservation.application.reservation.dto.PaymentDTO;
 import hhplus.concert.reservation.application.reservation.dto.ReservationDTO;
-import hhplus.concert.reservation.domain.common.CoreException;
-import hhplus.concert.reservation.domain.common.ErrorCode;
-import hhplus.concert.reservation.domain.customer.entity.Customer;
-import hhplus.concert.reservation.domain.customer.service.CustomerService;
-import hhplus.concert.reservation.domain.payment.entity.Payment;
-import hhplus.concert.reservation.domain.payment.service.PaymentService;
 import hhplus.concert.reservation.domain.reservation.entity.Reservation;
 import hhplus.concert.reservation.domain.reservation.service.ReservationService;
 import hhplus.concert.reservation.domain.seat.entity.Seat;
@@ -19,16 +13,14 @@ import java.util.List;
 @Component
 public class ReservationUsecase {
 
+    private final ReservationManager reservationManager;
     private final SeatService seatService;
     private final ReservationService reservationService;
-    private final PaymentService paymentService;
-    private final CustomerService customerService;
 
-    public ReservationUsecase(SeatService seatService, ReservationService reservationService, PaymentService paymentService, CustomerService customerService) {
+    public ReservationUsecase(ReservationManager reservationManager, SeatService seatService, ReservationService reservationService) {
+        this.reservationManager = reservationManager;
         this.seatService = seatService;
         this.reservationService = reservationService;
-        this.paymentService = paymentService;
-        this.customerService = customerService;
     }
 
     /**
@@ -37,9 +29,7 @@ public class ReservationUsecase {
      * @return 예약 정보를 담은 ReservationDTO 객체 리스트
      */
     public ReservationDTO createReservation(long seatId, long customerId) {
-        Seat seat = seatService.findById(seatId);
-        seat.reserveSeat(customerId);
-        seatService.save(seat);
+        Seat seat = seatService.reserveSeatWithLock_OptimisticLock(seatId, customerId);
 
         Reservation reservation = new Reservation(customerId, seat.getSeatId(), seat.getConcertScheduleId());
         Reservation savedReservation = reservationService.save(reservation);
@@ -54,34 +44,9 @@ public class ReservationUsecase {
      * @param amount 결제 금액
      * @return 결제 정보를 담은 PaymentDTO 객체
      */
-    public PaymentDTO processPayment(long reservationId, long amount) {
-        // 1. 예약 조회
-        Reservation reservation = reservationService.findById(reservationId);
-
-        // 2. 고객 조회
-        Customer customer = customerService.findById(reservation.getCustomerId());
-
-        // 3. 포인트 차감
-        customer.deductPoint(amount);
-        customerService.save(customer);
-
-        // 4. 결제 처리
-        Payment payment = new Payment(customer.getCustomerId(), reservationId, amount);
-        Payment savedPayment = paymentService.save(payment);
-
-        if (savedPayment != null) {
-            // 5. 예약 상태 업데이트 및 좌석 소유권 배정
-            reservation.completed();
-            reservationService.save(reservation);
-
-            Seat seat = seatService.findById(reservation.getSeatId());
-            seat.completed();
-            seatService.save(seat);
-
-            return new PaymentDTO(savedPayment.getPaymentId(), savedPayment.getCustomerId(), savedPayment.getReservationId(), savedPayment.getAmount(), savedPayment.getPaymentTime(), savedPayment.getCreatedAt(), savedPayment.getUpdatedAt());
-        } else {
-            throw new CoreException(ErrorCode.PAYMENT_FAILED);
-        }
+    public PaymentDTO processPayment(long customerId, long concertId, long reservationId, long amount) {
+        reservationManager.tryPaymentWithLock_OptimisticLock(reservationId, amount);
+        return reservationManager.PaymentCompleteWithLock_OptimisticLock(customerId, concertId, reservationId, amount);
     }
 
     /**

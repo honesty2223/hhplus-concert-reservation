@@ -113,9 +113,23 @@ public class TokenService {
         return expiredTokens;
     }
 
+    // 토큰 ID로 토큰 조회
+    public Token findById(long tokenId) {
+        return tokenRepository.findById(tokenId)
+                .orElseThrow(() -> new CoreException(ErrorCode.TOKEN_NOT_FOUND));
+    }
+
     // 고객 ID로 토큰 조회
     public Token findByCustomerId(long customerId, long concertId) {
         return tokenRepository.findByCustomerId(customerId, concertId);
+    }
+
+    public Token findByCustomerIdAndConcertId(long customerId, long concertId) {
+        return tokenRepository.findByCustomerIdAndConcertId(customerId, concertId);
+    }
+
+    public Token findByCustomerIdAndConcertIdWithLock(long customerId, long concertId) {
+        return tokenRepository.findByCustomerIdAndConcertIdWithLock(customerId, concertId);
     }
 
     // 콘서트 별 활성화 토큰 조회

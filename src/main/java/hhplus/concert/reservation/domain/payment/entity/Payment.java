@@ -41,6 +41,18 @@ public class Payment {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Version
+    private long version;
+
+    // version 제외한 생성자
+    public Payment(long customerId, long reservationId, long amount, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.customerId = customerId;
+        this.reservationId = reservationId;
+        this.amount = amount;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Payment(long customerId, long reservationId, long amount) {
         this.customerId = customerId;
         this.reservationId = reservationId;

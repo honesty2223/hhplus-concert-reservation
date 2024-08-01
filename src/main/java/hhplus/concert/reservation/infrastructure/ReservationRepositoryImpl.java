@@ -22,6 +22,11 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     }
 
     @Override
+    public Optional<Reservation> findByIdWithLock(long reservationId) {
+        return reservationJpaRepository.findByIdWithLock(reservationId);
+    }
+
+    @Override
     public List<Reservation> findByStatusAndReservationTimeBefore(String status, LocalDateTime cutoffTime) {
         return reservationJpaRepository.findByStatusAndReservationTimeBefore(status, cutoffTime);
     }

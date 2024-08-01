@@ -41,6 +41,19 @@ public class Token {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Version
+    private long version;
+
+    // version 제외한 생성자
+    public Token(long tokenId, long concertId, long customerId, long waitNumber, String status, LocalDateTime createdAt, LocalDateTime passedAt) {
+        this.tokenId = tokenId;
+        this.customerId = customerId;
+        this.concertId = concertId;
+        this.waitNumber = waitNumber;
+        this.status = status;
+        this.createdAt = createdAt;
+        this.updatedAt = passedAt;
+    }
 
     public Token(long concertId, long customerId, long waitNumber, String status, LocalDateTime createdAt, LocalDateTime passedAt) {
         this.customerId = customerId;

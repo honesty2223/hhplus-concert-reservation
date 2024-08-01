@@ -41,7 +41,7 @@ public class ReservationController {
     /**
      * 결제 API
      *
-     * @param paymentRequest 결제 요청 정보 (reservationId, amount)
+     * @param paymentRequest 결제 요청 정보 (customerId, concertId, reservationId, amount)
      * @return 결제 정보를 포함한 응답
      */
     @Operation(
@@ -50,7 +50,7 @@ public class ReservationController {
     )
     @PostMapping("/reservation/pay")
     public ResponseEntity<PaymentDTO> payForReservation(@RequestBody PaymentRequest paymentRequest) {
-        PaymentDTO paymentDTO = reservationUsecase.processPayment(paymentRequest.getReservationId(), paymentRequest.getAmount());
+        PaymentDTO paymentDTO = reservationUsecase.processPayment(paymentRequest.getCustomerId(), paymentRequest.getConcertId(), paymentRequest.getReservationId(), paymentRequest.getAmount());
         return ResponseEntity.ok(paymentDTO);
     }
 }

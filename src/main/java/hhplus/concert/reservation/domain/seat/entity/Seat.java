@@ -49,6 +49,22 @@ public class Seat {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Version
+    private long version;
+
+    // version 제외한 생성자
+    public Seat(long seatId, long concertScheduleId, int seatNumber, long price, boolean finallyReserved, long tempAssigneeId, LocalDateTime tempAssignExpiresAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.seatId = seatId;
+        this.concertScheduleId = concertScheduleId;
+        this.seatNumber = seatNumber;
+        this.price = price;
+        this.finallyReserved = finallyReserved;
+        this.tempAssigneeId = tempAssigneeId;
+        this.tempAssignExpiresAt = tempAssignExpiresAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     /**
      * 좌석 예약
      *

@@ -15,6 +15,10 @@ public interface TokenRepository {
 
     Token findByCustomerId(long customerId, long concertId);
 
+    Token findByCustomerIdAndConcertId(long customerId, long concertId);
+
+    Token findByCustomerIdAndConcertIdWithLock(long customerId, long concertId);
+
     List<Token> findPendingTokensByConcertId(long concertId);
 
     List<Token> findActiveTokensByConcertId(long concertId);

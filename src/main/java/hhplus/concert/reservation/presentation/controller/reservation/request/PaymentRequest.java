@@ -10,6 +10,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentRequest {
+    private long customerId;
+    private long concertId;
     private long reservationId;
     private long amount;
 }

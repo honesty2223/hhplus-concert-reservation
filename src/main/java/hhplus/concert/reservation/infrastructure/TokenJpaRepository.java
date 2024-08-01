@@ -21,6 +21,12 @@ public interface TokenJpaRepository extends JpaRepository<Token, Long> {
     @Query("SELECT t FROM Token t WHERE t.customerId = :customerId AND t.concertId = :concertId AND t.status != 'EXPIRED'")
     Token findByCustomerId(@Param("customerId") long customerId, @Param("concertId") long concertId);
 
+    Token findByCustomerIdAndConcertId(long customerId, long concertId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT t FROM Token t WHERE t.customerId = :customerId AND t.concertId = :concertId")
+    Token findByCustomerIdAndConcertIdWithLock(@Param("customerId") long customerId, @Param("concertId") long concertId);
+
     @Query("SELECT t FROM Token t WHERE t.concertId = :concertId AND t.status = 'PENDING' ORDER BY t.waitNumber ASC")
     List<Token> findPendingTokensByConcertId(@Param("concertId") long concertId);
 

@@ -19,7 +19,8 @@ public enum ErrorCode {
     PAYMENT_FAILED(HttpStatus.CONFLICT.value(), "결제 처리에 실패했습니다"),
     ALREADY_IN_QUEUE(HttpStatus.CONFLICT.value(), "이미 대기열에 참가한 사용자입니다"),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED.value(), "토큰이 유효하지 않거나 대기열 통과를 실패했습니다"),
-    MISSING_HEADER(HttpStatus.BAD_REQUEST.value(), "필수 헤더가 누락되었습니다");
+    MISSING_HEADER(HttpStatus.BAD_REQUEST.value(), "필수 헤더가 누락되었습니다"),
+    RESERVATION_ALREADY_PROCESSED(HttpStatus.CONFLICT.value(), "이미 처리된 예약입니다");
 
     private final int code;
     private final String message;
