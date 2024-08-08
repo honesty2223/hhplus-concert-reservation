@@ -12,7 +12,12 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "seat")
+// 인덱스 생성
+@Table(name = "seat"
+        ,indexes = {
+        @Index(name = "idx_concert_schedule_id", columnList = "concert_schedule_id")
+}
+)
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor

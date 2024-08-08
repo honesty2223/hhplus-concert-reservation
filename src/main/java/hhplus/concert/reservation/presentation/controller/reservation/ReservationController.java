@@ -8,6 +8,7 @@ import hhplus.concert.reservation.presentation.controller.reservation.request.Re
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,6 +52,15 @@ public class ReservationController {
     @PostMapping("/reservation/pay")
     public ResponseEntity<PaymentDTO> payForReservation(@RequestBody PaymentRequest paymentRequest) {
         PaymentDTO paymentDTO = reservationUsecase.processPayment(paymentRequest.getCustomerId(), paymentRequest.getConcertId(), paymentRequest.getReservationId(), paymentRequest.getAmount());
+        return ResponseEntity.ok(paymentDTO);
+    }
+
+    /**
+     * 결제 정보 전송 Mock API
+     *
+     */
+    @PostMapping("/payment")
+    public ResponseEntity<PaymentDTO> testApi(@RequestBody PaymentDTO paymentDTO) {
         return ResponseEntity.ok(paymentDTO);
     }
 }

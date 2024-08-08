@@ -10,6 +10,7 @@ import hhplus.concert.reservation.domain.concertSchedule.entity.ConcertSchedule;
 import hhplus.concert.reservation.domain.concertSchedule.service.ConcertScheduleService;
 import hhplus.concert.reservation.domain.seat.entity.Seat;
 import hhplus.concert.reservation.domain.seat.service.SeatService;
+import hhplus.concert.reservation.domain.service.MultiThread;
 import hhplus.concert.reservation.domain.token.entity.Token;
 import hhplus.concert.reservation.domain.token.service.TokenService;
 import org.junit.jupiter.api.BeforeEach;
@@ -166,5 +167,40 @@ public class ConcertUsecaseTest {
             assertEquals(expectedSeat.isFinallyReserved(), actualSeatDTO.isFinallyReserved());
             assertEquals(expectedSeat.getTempAssigneeId(), actualSeatDTO.getTempAssigneeId());
         }
+    }
+
+    // 테스트를 위한 용도
+    @Test
+    @DisplayName("좌석 200만 건 저장")
+    public void insertSeat() throws InterruptedException {
+        int lastNum = 0;
+        int finishedJ = 0;
+        for(int i = 1; i <= 20; i++) {
+            for(int j = 1; j <= 100000; j+=5) {
+                Thread thread1 = new Thread(new MultiThread(j + lastNum, i, j, seatService));
+                Thread thread2 = new Thread(new MultiThread(j + lastNum + 1, i, j, seatService));
+                Thread thread3 = new Thread(new MultiThread(j + lastNum + 2, i, j, seatService));
+                Thread thread4 = new Thread(new MultiThread(j + lastNum + 3, i, j, seatService));
+                Thread thread5 = new Thread(new MultiThread(j + lastNum + 4, i, j, seatService));
+                thread1.start();
+                thread2.start();
+                thread3.start();
+                thread4.start();
+                thread5.start();
+                finishedJ = j + lastNum;
+            }
+            lastNum = lastNum + finishedJ;
+        }
+    }
+
+    // 테스트코드로 유의미한 비교분석 값을 얻을 수 있을 지 테스트, 10ms차이가 나오긴함
+    @Test
+    @DisplayName("쿼리 성능 조회")
+    public void getAvailableSeats() {
+        long startTime = System.currentTimeMillis();
+        long concertScheduleId = 1L;
+        concertUsecase.getAvailableSeats(concertScheduleId);
+        long endTime = System.currentTimeMillis();
+        System.out.println("Query Execution Time: " + (endTime - startTime) + " ms");
     }
 }
