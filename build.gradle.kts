@@ -35,8 +35,11 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-	// swagger
+	// Swagger
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+
+	// Redis
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 }
 
 tasks.withType<Test> {
