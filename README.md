@@ -1,3 +1,294 @@
+# Query 분석 및 인덱싱을 통한 조회 쿼리 개선
+<details>
+<summary><b>테스트 데이터 INSERT</b></summary>
+
+- 멀티스레드를 이용한 빠른 적재
+
+```java
+    @Test
+    @DisplayName("좌석 200만 건 저장")
+    public void insertSeat() throws InterruptedException {
+        int lastNum = 0;
+        int finishedJ = 0;
+        for(int i = 1; i <= 20; i++) {
+            for(int j = 1; j <= 100000; j+=5) {
+                Thread thread1 = new Thread(new MultiThread(j + lastNum, i, j, seatService));
+                Thread thread2 = new Thread(new MultiThread(j + lastNum + 1, i, j, seatService));
+                Thread thread3 = new Thread(new MultiThread(j + lastNum + 2, i, j, seatService));
+                Thread thread4 = new Thread(new MultiThread(j + lastNum + 3, i, j, seatService));
+                Thread thread5 = new Thread(new MultiThread(j + lastNum + 4, i, j, seatService));
+                thread1.start();
+                thread2.start();
+                thread3.start();
+                thread4.start();
+                thread5.start();
+                finishedJ = j + lastNum;
+            }
+            lastNum = lastNum + finishedJ;
+        }
+    }
+```
+</details>
+
+<details>
+<summary><b>분석</b></summary>
+
+### 예약 가능한 콘서트 좌석 정보를 담고 있는 `Seat` 테이블에 인덱싱 적용
+
+1. **예약 가능한 콘서트 좌석 조회**: 콘서트 스케줄 ID를 기반으로 예약 가능한 좌석을 조회
+
+### Query 분석
+
+1. **`findAvailableSeats` 쿼리**:
+- **입력**: `concertScheduleId`
+- **동작**: 콘서트 스케줄 ID에 해당하는 좌석을 조회
+- **문제점**: 한 콘서트 당 좌석이 10만 개 정도 있다고 가정하면, 대량의 트래픽이 발생할 경우 최소 몇 백만 건의 데이터베이스 조회로 인한 성능 저하 발생 가능
+
+### 인덱스 적용
+
+예약 가능한 콘서트 일정 조회 시 대량의 트래픽이 발생할 경우 최소 몇 백만 건의 데이터베이스 조회로 인해 성능 저하가 발생할 수 있다고 판단, 이를 방지하기 위해 Seat 테이블에 concert_scheduled_id 컬럼을 인덱스로 생성하여 DB의 부하를 덜어 주기로 결정
+
+### 인덱스 설명
+
+1. **인덱스 생성**:
+```sql
+-- SQL문으로 인덱스를 만들 경우
+CREATE INDEX idx_concert_schedule_id ON SEAT (concert_schedule_id);
+```
+```java
+// SprintBoot JPA로 생성할 경우
+@Table(name = "seat", indexes = { @Index(name = "idx_concert_schedule_id_and_finally_reserved", columnList = "concert_schedule_id") })
+```
+
+2. **인덱스 조회**:
+```sql
+-- SQL문으로 인덱스 조회
+SHOW INDEX FROM SEAT;
+```
+![index](https://github.com/user-attachments/assets/d27f2a00-176c-4cb9-b48c-c2ac83d20245)
+
+### 적용 후 기대 효과
+
+- **검색 성능 향상**: 전체 테이블을 스캔하는 대신 인덱스(idx_concert_schedule_id)를 참조하여 원하는 데이터를 검색.
+
+</details>
+
+<details>
+<summary><b>인덱스 적용 테스트 결과</b></summary>
+
+### `DBeaver를 통한 결과 확인`
+
+- 쿼리의 실행시간을 볼 수 있도록 Profile 생성
+```sql
+SET profiling = 1;
+```
+- 인덱스 없이 Seat 테이블 조회
+```sql
+SELECT *
+FROM SEAT
+WHERE concert_schedule_id = 1
+AND finally_reserved = false
+AND (temp_assignee_id IS NULL OR temp_assignee_id = 0);
+```
+- 인덱스 생성 전 쿼리 EXPLAIN 확인
+```sql
+EXPLAIN
+SELECT *
+FROM SEAT
+WHERE concert_schedule_id = 1
+AND finally_reserved = false
+AND (temp_assignee_id IS NULL OR temp_assignee_id = 0);
+```
+![explain_without_index](https://github.com/user-attachments/assets/a182ae52-05ec-45cd-9a64-8240fead6899)
+- 인덱스 생성 전 쿼리 실행시간 확인
+```sql
+SHOW PROFILES
+```
+![query_without_index](https://github.com/user-attachments/assets/1421047e-7bf4-4cf0-9e9b-5897e9aa51c0)
+- 인덱스 생성
+```sql
+CREATE INDEX idx_concert_schedule_id ON SEAT (concert_schedule_id);
+```
+- 인덱스 확인
+```sql
+SHOW INDEX FROM SEAT;
+```
+![index_info](https://github.com/user-attachments/assets/40715ea8-d2bb-42e9-879e-4a4778c18479)
+- 인덱스 생성 후 쿼리 EXPLAIN 확인
+```sql
+EXPLAIN
+SELECT *
+FROM SEAT
+WHERE concert_schedule_id = 1
+AND finally_reserved = false
+AND (temp_assignee_id IS NULL OR temp_assignee_id = 0);
+```
+![explain_with_index](https://github.com/user-attachments/assets/12ca0c31-b98d-4fb7-b090-c0d0079e8e54)
+- 인덱스 생성 후 쿼리 실행시간 확인
+```sql
+SHOW PROFILES
+```
+![query_with_index](https://github.com/user-attachments/assets/272b0fab-e352-462f-aca0-4edcc824ecea)
+### `테스트 결과`
+- Explain에서 Type이 ref인 것을 확인하여 Index를 통한 조회가 잘 되었음을 알 수 있다.
+- 쿼리 조회 시간이 0.36초 -> 0.09초로 향상되었다.
+- 총 데이터 200만 건에서 10만 건을 조회한 경우라 0초대가 나오긴 했지만, 그래도 대량의 트래픽이 발생할 경우에는 1초가 걸리는 쿼리도 리스크가 있으므로 유의미한 쿼리 개선 효과라고 생각한다.
+</details>
+
+# MSA 서비스 분리 및 트랜잭션 처리 해결방안
+<details>
+<summary><b>분석</b></summary>
+
+### Choreography 패턴
+각 서비스가 자신의 트랜잭션과 관련된 이벤트를 발행하고, 다른 서비스는 이 이벤트를 구독하여 필요한 후속 작업을 수행
+
+### 결과 및 기대 효과
+
+1. **서비스 독립성 유지**:
+- **Choreography** 패턴을 사용하여 각 서비스가 자신의 트랜잭션을 독립적으로 처리하고, 이벤트를 발행하여 다른 서비스와 통신함. 이로 인해 서비스 간의 결합도가 낮아지며, 서비스는 서로 독립적으로 배포 및 확장할 수 있음
+
+2. **비즈니스 로직의 흐름 관리**:
+- 이벤트를 발행하고 구독하는 방식으로 비즈니스 로직의 흐름을 자연스럽게 관리할 수 있음
+
+3. **트랜잭션의 복잡성 감소**:
+- 각 서비스가 자신의 트랜잭션을 관리하고, 실패 시에는 관련된 이벤트를 발행하여 롤백 작업을 수행함. 이로 인해 분산 시스템에서 트랜잭션의 복잡성을 줄일 수 있음
+
+4. **비동기 처리**:
+- 이벤트 기반의 처리 방식은 비동기적으로 작업을 수행할 수 있음. 이는 높은 성능과 확장성을 제공하며, 서비스가 서로 독립적으로 작업을 수행할 수 있음
+
+5. **트랜잭션 관리**:
+- **좌석 서비스**, **예약 서비스**, **결제 서비스**, **토큰 서비스** 각각의 서비스는 자신의 트랜잭션을 처리하며, 실패 시 적절한 롤백 이벤트를 발행
+  - **좌석 서비스**에서 좌석 예약이 실패하면 `SeatReservationFailedEvent`를 발행
+  - **예약 서비스**는 예약 생성 실패 시 `ReservationCreationFailedEvent`를 발행하고, 이 이벤트를 수신한 다른 서비스는 필요한 롤백 작업을 수행
+  - **결제 서비스**와 **토큰 서비스**는 결제 및 토큰 만료 처리 실패 시 각각 `PaymentProcessingFailedEvent`와 `TokenExpirationFailedEvent`를 발행하여 관련 서비스를 롤백
+
+
+### 서비스 분리
+1. **좌석 서비스 (Seat Service)**
+- **역할**: 좌석 예약 및 상태 업데이트
+- **트랜잭션**: 좌석 상태를 예약된 상태로 업데이트
+- **이벤트**: `SeatReservedEvent` 발행
+
+2. **예약 서비스 (Reservation Service)**
+- **역할**: 예약 생성 및 상태 업데이트
+- **트랜잭션**: 예약 정보를 데이터베이스에 저장
+- **이벤트**: `ReservationCreatedEvent` 발행
+
+3. **결제 서비스 (Payment Service)**
+- **작업**: 결제 내역 생성 및 결제 처리
+- **트랜잭션**: 결제 내역을 데이터베이스에 저장하고, 결제 금액을 차감
+- **이벤트**: `PaymentProcessedEvent` 발행
+
+4. **토큰 서비스 (Token Service)**
+- **작업**: 토큰 만료 처리
+- **트랜잭션**: 토큰을 만료 처리
+- **이벤트**: `TokenExpiredEvent` 발행
+
+### 이벤트 흐름
+
+1. **좌석 예약 생성**
+- 좌석 서비스가 좌석 예약 요청을 받고, 좌석 상태를 예약된 상태로 업데이트
+- 좌석 예약이 성공적으로 완료되면 `SeatReservedEvent`를 발행
+
+2. **예약 생성**
+- 예약 서비스는 `SeatReservedEvent`를 구독하여 예약을 생성
+- 예약 생성 후 `ReservationCreatedEvent`를 발행
+
+3. **결제 처리**
+- 결제 서비스는 `ReservationCreatedEvent`를 구독하여 결제를 처리
+- 결제 완료 후 `PaymentProcessedEvent`를 발행
+
+4. **토큰 만료 처리**
+- 토큰 서비스는 `PaymentProcessedEvent`를 구독하여 토큰 만료 처리
+
+## 서비스 구현 및 보상 트랜잭션
+
+**좌석 서비스**
+
+```java
+public class SeatService {
+  @Autowired
+  private EventPublisher eventPublisher;
+
+  @Transactional
+  public void reserveSeat(long seatId, long customerId) {
+    try {
+      // 좌석 예약 로직 수행
+      eventPublisher.publish(new SeatReservedEvent(seatId, customerId));
+    } catch(Exception e) {
+      // 좌석 예약 실패 시 롤백 없음
+      eventPublisher.publish(new SeatReservationFailedEvent(seatId, customerId));
+      throw e;
+    }
+  }
+}
+```
+
+**예약 서비스**
+
+```java
+public class ReservationService {
+  @Autowired
+  private EventPublisher eventPublisher;
+
+  @Transactional
+  public void createReservation(long seatId, long customerId) {
+    try {
+      // 예약 생성 로직 수행
+      eventPublisher.publish(new ReservationCreatedEvent(seatId, customerId));
+    } catch(Exception e) {
+      // 예약 생성 실패 시 좌석 롤백
+      eventPublisher.publish(new ReservationCreationFailedEvent(seatId, customerId));
+      throw e;
+    }
+  }
+}
+```
+
+**결제 서비스**
+
+```java
+public class PaymentService {
+  @Autowired
+  private EventPublisher eventPublisher;
+
+  @Transactional
+  public void processPayment(long reservationId, long amount) {
+    try {
+      // 결제 처리 로직 수행
+      eventPublisher.publish(new PaymentProcessedEvent(reservationId, amount));
+    } catch(Exception e) {
+      // 결제 처리 실패 시 예약 롤백 및 좌석 롤백
+      eventPublisher.publish(new PaymentProcessingFailedEvent(reservationId, amount));
+      throw e;
+    }
+  }
+}
+```
+
+**토큰 서비스**
+
+```java
+public class TokenService {
+  @Autowired
+  private EventPublisher eventPublisher;
+
+  @Transactional
+  public void expireToken(long customerId) {
+    try {
+      // 토큰 만료 처리 로직 수행
+      eventPublisher.publish(new TokenExpiredEvent(customerId));
+    } catch(Exception e) {
+      // 토큰 만료 처리 실패 시 결제 및 예약, 좌석 롤백
+      eventPublisher.publish(new TokenExpirationFailedEvent(customerId));
+      throw e;
+    }
+  }
+}
+```
+
+</details>
+
 # Query 분석 및 캐싱 전략 설계
 <details>
 <summary><b>분석</b></summary>
