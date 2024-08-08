@@ -29,7 +29,7 @@ public class ReservationUsecase {
      * @return 예약 정보를 담은 ReservationDTO 객체 리스트
      */
     public ReservationDTO createReservation(long seatId, long customerId) {
-        Seat seat = seatService.reserveSeatWithLock_OptimisticLock(seatId, customerId);
+        Seat seat = seatService.reserveSeatWithLock(seatId, customerId);
 
         Reservation reservation = new Reservation(customerId, seat.getSeatId(), seat.getConcertScheduleId());
         Reservation savedReservation = reservationService.save(reservation);
@@ -45,8 +45,8 @@ public class ReservationUsecase {
      * @return 결제 정보를 담은 PaymentDTO 객체
      */
     public PaymentDTO processPayment(long customerId, long concertId, long reservationId, long amount) {
-        reservationManager.tryPaymentWithLock_OptimisticLock(reservationId, amount);
-        return reservationManager.PaymentCompleteWithLock_OptimisticLock(customerId, concertId, reservationId, amount);
+        reservationManager.tryPaymentWithLock(reservationId, amount);
+        return reservationManager.PaymentCompleteWithLock(customerId, concertId, reservationId, amount);
     }
 
     /**

@@ -23,31 +23,6 @@ public class SeatService {
 
     @Transactional
     public Seat reserveSeatWithLock(long seatId, long customerId) {
-        log.info("{}>> [Pessimistic Lock] reserveSeatWithLock 시작, 고객ID: {}", Thread.currentThread().getName(), customerId);
-        long startTime = System.currentTimeMillis(); // 시작 시간 기록
-
-        // try 블록 외부에서 선언
-        Seat seat = null;
-        Seat tempSeat = null;
-
-        try {
-            seat = findByIdWithLock(seatId);
-            seat.reserveSeat(customerId);
-            tempSeat = save(seat);
-        } catch (Exception e) {
-            log.error("{}>> [Pessimistic Lock] reserveSeatWithLock 예외 발생: 고객ID: {}, 오류 메시지: {}",
-                    Thread.currentThread().getName(), customerId, e.getMessage());
-            throw e;
-        } finally {
-            long endTime = System.currentTimeMillis(); // 종료 시간 기록
-            long duration = endTime - startTime;
-            log.info("{}>> [Pessimistic Lock] reserveSeatWithLock 종료, 소요 시간: {} ms", Thread.currentThread().getName(), duration);
-        }
-        return tempSeat;
-    }
-
-    @Transactional
-    public Seat reserveSeatWithLock_OptimisticLock(long seatId, long customerId) {
         log.info("{}>> [Optimistic Lock] reserveSeatWithLock 시작, 고객ID: {}", Thread.currentThread().getName(), customerId);
         long startTime = System.currentTimeMillis(); // 시작 시간 기록
 
@@ -96,11 +71,6 @@ public class SeatService {
 
     public Seat findById(long seatId) {
         return seatRepository.findById(seatId)
-                .orElseThrow(() -> new CoreException(ErrorCode.SEAT_NOT_FOUND));
-    }
-
-    public Seat findByIdWithLock(long seatId) {
-        return seatRepository.findByIdWithLock(seatId)
                 .orElseThrow(() -> new CoreException(ErrorCode.SEAT_NOT_FOUND));
     }
 

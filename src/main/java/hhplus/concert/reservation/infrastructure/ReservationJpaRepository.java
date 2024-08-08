@@ -15,10 +15,6 @@ import java.util.Optional;
 @Repository
 public interface ReservationJpaRepository extends JpaRepository<Reservation, Long> {
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT r FROM Reservation r WHERE r.reservationId = :reservationId")
-    Optional<Reservation> findByIdWithLock(@Param("reservationId") Long reservationId);
-
     // 결제 대기 상태 and 예약 시간이 기준 시간 이전인 예약을 찾는 메소드
     List<Reservation> findByStatusAndReservationTimeBefore(String status, LocalDateTime reservationTime);
 }

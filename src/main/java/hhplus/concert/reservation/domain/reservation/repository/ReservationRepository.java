@@ -10,8 +10,6 @@ public interface ReservationRepository {
 
     Optional<Reservation> findById(long reservationId);
 
-    Optional<Reservation> findByIdWithLock(long reservationId);
-
     List<Reservation> findByStatusAndReservationTimeBefore(String status, LocalDateTime cutoffTime);
 
     Reservation save(Reservation reservation);

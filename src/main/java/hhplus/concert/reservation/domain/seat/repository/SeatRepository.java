@@ -11,7 +11,5 @@ public interface SeatRepository {
 
     Optional<Seat> findById(long seatId);
 
-    Optional<Seat> findByIdWithLock(long seatId);
-
     Seat save(Seat seat);
 }

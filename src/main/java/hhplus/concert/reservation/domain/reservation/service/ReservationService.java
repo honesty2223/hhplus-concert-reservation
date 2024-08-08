@@ -23,11 +23,6 @@ public class ReservationService {
                 .orElseThrow(() -> new CoreException(ErrorCode.RESERVATION_NOT_FOUND));
     }
 
-    public Reservation findByIdWithLock(long reservationId) {
-        return reservationRepository.findByIdWithLock(reservationId)
-                .orElseThrow(() -> new CoreException(ErrorCode.RESERVATION_NOT_FOUND));
-    }
-
     public List<Reservation> cancelExpiredReservations() {
         LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(5);
 
