@@ -6,6 +6,7 @@ import hhplus.concert.reservation.domain.common.ErrorCode;
 import hhplus.concert.reservation.domain.customer.entity.Customer;
 import hhplus.concert.reservation.domain.customer.service.CustomerService;
 import hhplus.concert.reservation.domain.payment.entity.Payment;
+import hhplus.concert.reservation.domain.payment.event.PaymentCompletedEvent;
 import hhplus.concert.reservation.domain.payment.service.PaymentService;
 import hhplus.concert.reservation.domain.reservation.entity.Reservation;
 import hhplus.concert.reservation.domain.reservation.service.ReservationService;
@@ -14,6 +15,7 @@ import hhplus.concert.reservation.domain.seat.service.SeatService;
 import hhplus.concert.reservation.domain.token.entity.Token;
 import hhplus.concert.reservation.domain.token.service.TokenService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,13 +29,15 @@ public class ReservationManager {
     private final PaymentService paymentService;
     private final CustomerService customerService;
     private final TokenService tokenService;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public ReservationManager(SeatService seatService, ReservationService reservationService, PaymentService paymentService, CustomerService customerService, TokenService tokenService) {
+    public ReservationManager(SeatService seatService, ReservationService reservationService, PaymentService paymentService, CustomerService customerService, TokenService tokenService, ApplicationEventPublisher eventPublisher) {
         this.seatService = seatService;
         this.reservationService = reservationService;
         this.paymentService = paymentService;
         this.customerService = customerService;
         this.tokenService = tokenService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -111,6 +115,19 @@ public class ReservationManager {
 
                 log.info("{}>> [Optimistic Lock] PaymentCompleteWithLock 완료, 고객ID: {}, 예약ID: {}",
                         Thread.currentThread().getName(), customerId, reservationId);
+
+                // 결제 완료 후 이벤트 발행
+                PaymentDTO paymentDTO = new PaymentDTO(
+                        savedPayment.getPaymentId(),
+                        savedPayment.getCustomerId(),
+                        savedPayment.getReservationId(),
+                        savedPayment.getAmount(),
+                        savedPayment.getPaymentTime(),
+                        savedPayment.getCreatedAt(),
+                        savedPayment.getUpdatedAt()
+                );
+                eventPublisher.publishEvent(new PaymentCompletedEvent(paymentDTO));
+
                 break; // 성공적으로 완료된 경우 루프 종료
 
             } catch (OptimisticLockingFailureException e) {
