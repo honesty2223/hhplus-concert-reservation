@@ -96,4 +96,29 @@ public class KafkaIntegrationTest {
         Outbox updatedOutbox = outboxRepository.findByPaymentId(paymentDTO.getPaymentId());
         assertEquals(OutboxStatus.PUBLISHED, updatedOutbox.getStatus());
     }
+
+    @Test
+    @DisplayName("스케줄러 로직 테스트")
+    public void outboxProcessTest() throws Exception {
+        // given
+        PaymentCompletedEvent event1 = new PaymentCompletedEvent(new PaymentDTO(1L, 1L, 1L, 7000L, createTime, createTime, createTime));
+        PaymentCompletedEvent event2 = new PaymentCompletedEvent(new PaymentDTO(2L, 2L, 2L, 8000L, createTime, createTime, createTime));
+        PaymentCompletedEvent event3 = new PaymentCompletedEvent(new PaymentDTO(3L, 3L, 3L, 9000L, createTime, createTime, createTime));
+        String message1 = objectMapper.writeValueAsString(event1);
+        String message2 = objectMapper.writeValueAsString(event2);
+        String message3 = objectMapper.writeValueAsString(event3);
+        List<Outbox> outboxes = Arrays.asList(
+                new Outbox(1L, message1),
+                new Outbox(2L, message2),
+                new Outbox(3L, message3)
+        );
+
+        // Save each outbox
+        for (Outbox outbox : outboxes) {
+            outboxRepository.save(outbox);
+        }
+
+        // 스케줄러 대기
+        Thread.sleep(15000);
+    }
 }
