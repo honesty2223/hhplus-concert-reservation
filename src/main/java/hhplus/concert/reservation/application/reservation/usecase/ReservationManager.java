@@ -126,6 +126,7 @@ public class ReservationManager {
                         savedPayment.getCreatedAt(),
                         savedPayment.getUpdatedAt()
                 );
+                // 카프카 전송
                 eventPublisher.publishEvent(new PaymentCompletedEvent(paymentDTO));
 
                 break; // 성공적으로 완료된 경우 루프 종료
