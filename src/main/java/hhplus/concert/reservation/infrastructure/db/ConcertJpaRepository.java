@@ -1,0 +1,9 @@
+package hhplus.concert.reservation.infrastructure.db;
+
+import hhplus.concert.reservation.domain.concert.entity.Concert;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ConcertJpaRepository extends JpaRepository<Concert, Long> {
+}
