@@ -1,3 +1,352 @@
+# 부하 테스트 분석
+<details>
+<summary><b>부하 테스트 분석 - 대기열 참가(토큰 발급)</b></summary>
+
+## 1. 테스트 대상
+
+- **대기열 참가 API**: 콘서트 대기열에 고객을 추가(토큰 발급) 하는 API 엔드포인트
+
+## 2. 테스트 목적
+
+- **시스템 안정성 평가**: 예상되는 정상 사용자의 수를 시뮬레이션하여 시스템의 안정성을 평가
+- **최대 처리량 테스트**: 시스템이 처리할 수 있는 최대 처리량(TPS, Transactions Per Second)을 테스트하여 시스템의 한계를 평가
+- **응답 속도 평가**: 각 API 호출의 응답 시간(Duration)을 측정하여 성능을 평가
+- **장애 예방 및 성능 개선**: 테스트 결과를 기반으로 장애를 예방하고 성능을 개선하기 위한 계획을 수립
+
+## 3. 테스트 스크립트
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+import {randomIntBetween, randomItem} from 'https://jslib.k6.io/k6-utils/1.2.0/index.js';
+
+// 테스트 설정
+export let options = {
+  scenarios: {
+    token_scenario: {
+      executor: 'per-vu-iterations',
+      vus: 10, // 가상 사용자 수
+      iterations: 300, // 각 가상 사용자가 반복할 횟수
+      exec: 'token_scenario', // 실행할 함수
+    },
+  },
+};
+
+// 시나리오 함수
+export function token_scenario() {
+
+  let userId = randomIntBetween(1, 152831);
+
+  let payload = JSON.stringify({
+    customerId: userId
+  });
+  let res = http.post('http://192.168.219.100:8080/api/tokens/generate', payload, {
+//  let res = http.post('http://localhost:8080/api/tokens/generate', payload, {
+  headers: { 'Content-Type': 'application/json' },
+  tags: {name: 'token-generate'},
+  timeout: '300s'
+  }); // 요청할 엔드포인트
+
+  const isStatus200 = check(res, {
+    'is status 200': (r) => r.status === 200,
+  });
+
+  if (!isStatus200) {
+    console.log(`Request failed. Status: ${res.status}, Response Body: ${res.body}`);
+  }
+}
+```
+
+## 4. 테스트 시나리오
+
+1. **대기열 참가 API 테스트**
+  - **도구**: K6와 Grafana 활용
+  - **테스트 설정**:
+    - Local PC의 CPU 한계로 최대 3000 건의 요청을 시뮬레이션
+  - **평가 항목**:
+    - **응답 시간 (Duration)**: 평균 응답 시간(avg), 최대 응답 시간(max), 95백분위 응답 시간(p95)을 측정
+    - **처리량 (TPS/RPS)**: 초당 트랜잭션 수(TPS) 또는 초당 요청 수(RPS)를 측정
+    - **실패 요청 비율**: 전체 요청 대비 실패 요청의 비율을 평가
+  - **결과 시각화**:
+    - Grafana를 사용하여 성능 지표를 시각화
+  - **테스트 결과 스크린샷**:
+    - ![대기열-과부하-3000](https://github.com/user-attachments/assets/7df13e7d-fa7d-482f-a791-13b1ebb59e36)
+    - ![대기열-그라파냐-3000](https://github.com/user-attachments/assets/1716c029-539f-43fc-8f40-89cf4ce2d8de)
+
+## 5. 성능 지표 분석 및 평가
+
+- **응답 시간 (Duration)**:
+    - **평균 응답 시간**: 212.32ms
+    - **최대 응답 시간**: 431.16ms
+    - **95백분위 응답 시간 (p95)**: 397.17ms
+
+  **평가**: 평균 응답 시간은 212.32ms로 상대적으로 좋은 성능을 보이지만, 최대 응답 시간이 431.16ms로 일부 요청에서 병목 현상이 발생하는 것으로 보임
+
+- **처리량 (TPS/RPS)**:
+    - **TPS**: 46.8 트랜잭션/초
+
+  **평가**: 시스템은 초당 46.8개의 요청을 처리할 수 있는 능력을 보임
+
+- **실패 요청 비율**:
+    - **실패 비율**: 1.13% (34/3000)
+
+  **평가**: 실패 비율이 1.13%로, 고객 ID가 중복될 때 에러가 발생하는 비즈니스 로직의 영향을 받음.. 이는 스크립트에서 랜덤으로 생성된 고객 ID가 비즈니스 로직과 충돌할 수 있음을 나타냄
+
+**결론**: 시스템은 대부분의 요청에 대해 안정적인 성능을 보이며, 평균 응답 시간은 양호하지만, 최대 응답 시간이 긴 일부 요청에서 병목 현상이 나타날 수 있음. 실패 비율은 비즈니스 로직의 특성으로 인한 것이므로, 비즈니스 로직과 스크립트의 조정이 필요
+
+## 6. 개선 계획
+- **성능 최적화**: 응답 시간의 최대값을 줄이기 위해 시스템 성능 최적화를 고려
+- **비즈니스 로직 검토**: 고객 ID 충돌 문제를 해결하기 위해 비즈니스 로직과 요청 생성 방식을 검토하고 개선
+- **자원 확장**: 필요 시 서버 자원 확장을 검토하여 처리량을 향상
+
+</details>
+
+<details>
+<summary><b>부하 테스트 분석 - 콘서트 예약 & 결제</b></summary>
+
+## 1. 테스트 대상
+
+- **콘서트 예약 및 결제 API**: 콘서트의 예약 및 결제를 처리하는 일련의 API 엔드포인트
+
+## 2. 테스트 목적
+
+- **시스템 안정성 평가**: 사용자가 대량으로 발생할 때의 시스템 안정성을 평가
+- **최대 처리량 테스트**: 예약 및 결제 프로세스에서 시스템이 처리할 수 있는 최대 처리량(TPS, Transactions Per Second)을 테스트하여 시스템의 한계를 확인
+- **응답 속도 평가**: 각 API 호출의 응답 시간(Duration)을 측정하여 성능을 평가
+- **장애 예방 및 성능 개선**: 테스트 결과를 바탕으로 시스템 장애를 예방하고, 성능을 개선하기 위한 계획을 수립
+
+## 3. 테스트 스크립트
+```javascript
+import http from 'k6/http';
+import { check } from 'k6';
+import { randomIntBetween, randomItem } from 'https://jslib.k6.io/k6-utils/1.2.0/index.js';
+
+export let options = {
+    stages: [
+        { duration: '1m', target: 50 },   // 1분 동안 사용자를 50명으로 점진적으로 증가
+        { duration: '30s', target: 300 },  // 30초 동안 사용자를 300명으로 급격히 증가
+        { duration: '2m', target: 300 },   // 2분 동안 사용자를 300명으로 유지
+        { duration: '1m', target: 0 }      // 1분 동안 사용자를 0명으로 점진적으로 감소
+    ]
+};
+
+export default function() {
+    // customerId를 10부터 510 사이에서 랜덤으로 생성 (초기 고객 테스트 실행 동안 토큰 활성화 유지를 위함)
+    let customerId = randomIntBetween(10, 510);
+
+    // 포인트 충전
+    charge(customerId);
+
+    // 콘서트 조회
+    let concertId = getConcerts();
+    if (!concertId) return; // 콘서트가 없으면 종료
+
+    // 콘서트 스케줄 조회
+    let concertScheduleId = getConcertSchedule(concertId);
+    if (!concertScheduleId) return; // 스케줄이 없으면 종료
+
+    // 콘서트 좌석 조회
+    let seatId = getConcertSeats(concertScheduleId);
+    if (!seatId) return; // 좌석이 없으면 종료
+
+    // 좌석 예약
+    let reservationId = reserveSeat(seatId, customerId);
+    if (!reservationId) return; // 예약 실패 시 종료
+
+    // 결제
+    payForReservation(customerId, concertId, reservationId);
+}
+
+function charge(customerId) {
+    // 100,000에서 200,000 사이의 랜덤 충전 포인트 생성
+    let chargingPoint = randomIntBetween(100, 200) * 1000;
+    let res = http.patch(
+        `http://localhost:8080/api/customers/${customerId}/point`,
+        JSON.stringify({ amount: chargingPoint }),
+        {
+            headers: { 'Content-Type': 'application/json' },
+            tags: { name: 'charge' }
+        }
+    );
+    check(res, { 'Charge - is status 200': (r) => r.status === 200 });
+}
+
+function getConcerts() {
+    let res = http.get('http://localhost:8080/api/concerts', { tags: { name: 'getConcerts' } });
+    check(res, { 'Get Concerts - is status 200': (r) => r.status === 200 });
+
+    let concerts = res.json();
+    return randomItem(concerts).concertId;
+}
+
+function getConcertSchedule(concertId) {
+    let res = http.get(`http://localhost:8080/api/concerts/${concertId}`, {
+        headers: {
+            'Authorization': `6582b8ba-f1b0-4bc2-8cd2-20674ae836a4` // Token ID 추가
+        },
+        tags: { name: 'getConcertSchedule' }
+    });
+    check(res, { 'Get ConcertSchedule - is status 200': (r) => r.status === 200 });
+
+    let concertSchedules = res.json();
+    return randomItem(concertSchedules).concertScheduleId;
+}
+
+function getConcertSeats(concertScheduleId) {
+    let res = http.get(`http://localhost:8080/api/concerts/${concertScheduleId}/seat`, {
+        headers: {
+            'Authorization': `6582b8ba-f1b0-4bc2-8cd2-20674ae836a4` // Token ID 추가
+        },
+        tags: { name: 'getConcertSeats' }
+    });
+    check(res, { 'Get Concert Seats - is status 200': (r) => r.status === 200 });
+
+    let seats = res.json();
+    return randomItem(seats).seatId;
+}
+
+function reserveSeat(seatId, customerId) {
+    let reservationRequest = JSON.stringify({
+        seatId: seatId,
+        customerId: customerId
+    });
+
+    let res = http.post('http://localhost:8080/api/reservation', reservationRequest, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `6582b8ba-f1b0-4bc2-8cd2-20674ae836a4` // Token ID 추가
+         },
+        tags: { name: 'reserveSeat' }
+    });
+
+    check(res, { 'Reserve Seat - is status 200': (r) => r.status === 200 });
+
+    let reservationResponse = res.json();
+    return reservationResponse.reservationId;
+}
+
+function payForReservation(customerId, concertId, reservationId) {
+    let paymentRequest = JSON.stringify({
+        customerId: customerId,
+        concertId: concertId,
+        reservationId: reservationId,
+        amount: randomIntBetween(7000, 10000)
+    });
+    let res = http.post('http://localhost:8080/api/reservation/pay', paymentRequest, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `6582b8ba-f1b0-4bc2-8cd2-20674ae836a4` // Token ID 추가
+         },
+        tags: { name: 'payForReservation' }
+    });
+    check(res, { 'Pay for Reservation - is status 200': (r) => r.status === 200 });
+    return res.json();
+}
+```
+
+## 4. 테스트 시나리오
+
+1. **콘서트 예약 및 결제 API 테스트**
+- **도구**: K6와 Grafana 활용
+- **테스트 설정**:
+    - 단계적 부하 증가: 최대 300명의 사용자를 시뮬레이션하여 4단계에 걸쳐 4분 30초 동안 부하 테스트를 수행
+    - 각 시나리오에서 고객 포인트 충전, 콘서트 조회, 스케줄 조회, 좌석 조회, 좌석 예약, 결제까지의 흐름을 전체적으로 테스트
+- **평가 항목**:
+    - **응답 시간 (Duration)**: 평균 응답 시간(avg), 최대 응답 시간(max), 95백분위 응답 시간(p95)을 측정
+    - **처리량 (TPS/RPS)**: 초당 트랜잭션 수(TPS) 또는 초당 요청 수(RPS)를 측정
+    - **실패 요청 비율**: 전체 요청 대비 실패 요청의 비율을 평가
+- **결과 시각화**:
+    - Grafana를 사용하여 성능 지표를 시각화
+- **테스트 결과 스크린샷**:
+    - ![예약-결제-과부하-300](https://github.com/user-attachments/assets/4e819a98-b3e7-4a9c-a8c4-421757eaa6e2)
+    - ![예약-결제-그라파냐-300](https://github.com/user-attachments/assets/70b71c95-e9f7-4bec-873c-5d5139075d08)
+
+## 5. 성능 지표 분석 및 평가
+
+- **응답 시간 (Duration)**:
+    - **평균 응답 시간**: 621.35ms
+    - **최대 응답 시간**: 8.39s
+    - **95백분위 응답 시간 (p95)**: 1.85s
+
+  **평가**: 평균 응답 시간은 621.35ms로 비교적 양호하지만, 최대 응답 시간이 8.39초에 달해 일부 요청에서 큰 지연이 발생하는 것을 확인. 95백분위 응답 시간(p95)이 1.85초로, 시스템의 성능 병목이 있을 가능성을 시사
+
+- **처리량 (TPS/RPS)**:
+    - **TPS**: 312.21 트랜잭션/초
+
+  **평가**: 시스템은 초당 312.21개의 요청을 처리할 수 있으며, 이는 테스트 설정 하에서 기대했던 처리량과 일치함
+
+- **실패 요청 비율**:
+    - **실패 비율**: 0.09% (84/84298)
+
+  **평가**: 실패 비율이 0.09%로 매우 낮지만, 좌석 예약 및 결제 과정에서 일부 요청이 실패했음을 알 수 있음. 이는 시스템의 일시적인 과부하나 API의 일관성 문제로 인한 것일 수 있음
+
+**결론**: 시스템은 대부분의 요청에 대해 안정적인 성능을 보이며, 평균 응답 시간도 적절한 수준을 유지하였으나, 최대 응답 시간이 긴 요청이 발생하여 성능 최적화가 필요. 실패 비율은 낮지만, 주요 트랜잭션에서 발생하는 오류를 방지하기 위해 추가적인 개선이 요구됨
+
+## 6. 개선 계획
+- **성능 최적화**: 최대 응답 시간을 줄이기 위해 API 호출 시점의 병목 지점을 파악하고 최적화 작업 수행
+- **트랜잭션 처리 개선**: 좌석 예약 및 결제 과정에서 발생하는 실패 요청을 줄이기 위한 개선 작업 수행
+- **자원 할당 검토**: 시스템 자원의 효율적 배분을 위해 자원 할당 계획을 재검토하고, 필요 시 확장
+
+</details>
+
+# 가상 장애 대응 문서
+<details>
+<summary><b>장애 개요</b></summary>
+
+- 발생일시: 2024년 8월 22일 15:30 (UTC)
+- 장애 지속 시간: 2시간 (15:30 ~ 17:30 UTC)
+- 장애 영향: 모든 사용자에게 서비스 제공 중단, 일부 기능 장애
+
+- 장애 증상:
+  - 사용자 요청 처리 지연
+  - 애플리케이션 응답 타임아웃
+  - 서버 CPU 사용률 100% 도달
+  - 일부 API 호출 실패 (HTTP 상태 코드 503)
+</details>
+
+<details>
+<summary><b>원인 분석</b></summary>
+
+- 높은 동시 요청 수:
+  - 증상: 애플리케이션 서버가 처리할 수 있는 요청 수를 초과하여 CPU 사용률이 100%에 도달
+  - 원인: 급격한 트래픽 증가 또는 비효율적인 요청 처리 로직으로 인해 서버의 CPU 리소스 고갈
+- 비효율적인 코드 및 쿼리:
+  - 증상: 애플리케이션 로그에 CPU 사용량이 높은 코드 블록 및 비효율적인 데이터베이스 쿼리가 발견
+  - 원인: 비효율적인 루프, 대량의 데이터 처리 또는 복잡한 쿼리로 인해 CPU 리소스의 비정상적인 소모
+- 스레드 및 동시성 문제:
+  - 증상: 스레드가 블로킹되거나 대기 상태로 인해 CPU 자원이 비효율적으로 사용됨
+  - 원인: 동시성 문제로 인해 스레드가 적절히 관리되지 않고, CPU 사용률이 증가
+</details>
+
+<details>
+<summary><b>장애 대응 과정</b></summary>
+
+- 긴급 대응 조치:
+  - 시스템 모니터링: 실시간 모니터링 도구를 사용하여 CPU 사용률 및 애플리케이션 성능 지표 확인
+  - 서버 재시작: CPU 과부하를 일시적으로 완화하기 위해 애플리케이션 서버를 재시작
+  - 부하 분산: 로드 밸런서를 통해 트래픽을 분산시키고, 서버의 부하를 줄임
+- 비효율적인 코드 및 쿼리:
+  - 증상: 애플리케이션 로그에 CPU 사용량이 높은 코드 블록 및 비효율적인 데이터베이스 쿼리가 발견
+  - 원인: 비효율적인 루프, 대량의 데이터 처리 또는 복잡한 쿼리로 인해 CPU 리소스의 비정상적인 소모
+- 스레드 및 동시성 문제:
+  - 증상: 스레드가 블로킹되거나 대기 상태로 인해 CPU 자원이 비효율적으로 사용됨
+  - 원인: 동시성 문제로 인해 스레드가 적절히 관리되지 않고, CPU 사용률이 증가
+</details>
+
+<details>
+<summary><b>재발 방지 대책</b></summary>
+
+- Short-term 대책:
+  - 스케일링: 서버의 CPU 및 메모리 자원을 확장하여 트래픽 증가에 대응
+  - 리소스 모니터링 강화: CPU 사용률, 메모리 사용량 등이 일정 기준을 초과했을 경우 담당자에게 알림이 가는 기준치 강화
+- Mid-term 대책:
+  - 코드 최적화: 비효율적인 코드 및 쿼리를 분석하여 수정. 예를 들어 Redis를 통해 대기열 및 캐싱 처리
+  - 커뮤니케이션: 장애 발생 및 대응 결과를 고객 및 관련 부서에 공지
+  - 문서화: 장애 대응 과정과 원인 분석 결과를 문서화하여 팀 내 공유
+- Long-term 대책:
+  - 성능 테스트 생활화: 정기적인 성능 테스트 및 부하 테스트를 통해 시스템의 처리 능력을 확인하고, 병목 지점을 사전에 발견
+  - 자동 스케일링 설정: 자동 스케일링 정책을 설정하여 서버 자원이 부족할 때 자동으로 인스턴스를 추가 (쿠버네티스 활용)
+</details>
+
 # Query 분석 및 인덱싱을 통한 조회 쿼리 개선
 <details>
 <summary><b>테스트 데이터 INSERT</b></summary>
